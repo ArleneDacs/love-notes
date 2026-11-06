@@ -192,7 +192,9 @@ em.opt{font-style:normal;font-weight:500;color:var(--muted);font-size:12px;margi
 .panel section{padding:20px 0;border-bottom:1px solid var(--line)}
 .panel section:last-child{border-bottom:0}
 .panel .sec-title{margin-bottom:12px}
-.letter-summary{font-size:14px;color:var(--text);margin:0 0 14px;line-height:1.5;padding:12px 14px;background:var(--surface-2);border-radius:var(--r-sm);border-left:3px solid var(--accent);font-style:italic}
+.letter-summary{font-size:14px;color:var(--text);margin:0 0 14px;line-height:1.5;padding:12px 14px;background:var(--surface-2);border-radius:var(--r-sm);border-left:3px solid var(--accent);font-style:italic;overflow-wrap:anywhere}
+.pv-note{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:13px;color:var(--muted);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);padding:10px 14px;margin:0;max-width:780px;width:100%}
+.pv-note .link-btn{padding:0;font-size:13px;color:var(--accent);text-decoration-color:var(--accent)}
 .letter-summary.empty{color:var(--muted);font-style:normal;border-left-color:var(--line-2)}
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .link-row{display:flex;justify-content:space-between;gap:8px;margin-top:8px}
@@ -389,7 +391,7 @@ dialog#writeModal::backdrop{background:rgba(43,33,37,.55);backdrop-filter:blur(3
       </div>
     </div>
     <div class="preview" id="preview" hidden>
-      <p class="who-group" id="pvNames" style="margin:0;max-width:780px;width:100%"></p>
+      <p class="pv-note" id="pvNames"></p>
       <figure><figcaption>Page 1, the outside of each card: back on the left, front on the right</figcaption><div class="sheet" id="sheet1"></div></figure>
       <figure><figcaption>Page 2, the inside of each card</figcaption><div class="sheet" id="sheet2"></div></figure>
     </div>
@@ -629,7 +631,7 @@ dialog#writeModal::backdrop{background:rgba(43,33,37,.55);backdrop-filter:blur(3
   const fields=[...document.querySelectorAll('[data-field]')];
 
   let state = {theme:0, ...THEMES[0], motif:'hearts', title:'serif', hand:'caveat', size:1, lines:true,
-    paperSize:'letter', scope:'one', onlyWritten:true, filter:'all', mode:'3d', from:'', extra:[], notes:{}, current:null};
+    paperSize:'letter', scope:'all', onlyWritten:true, filter:'all', mode:'3d', from:'', extra:[], notes:{}, current:null};
   delete state.name;
   let view = {rx:8, ry:-18, open:false};
 
@@ -1014,10 +1016,15 @@ dialog#writeModal::backdrop{background:rgba(43,33,37,.55);backdrop-filter:blur(3
   function schedulePreview(){ if(state.mode!=='preview') return; clearTimeout(prevT); prevT=setTimeout(renderPreview,200); }
   function renderPreview(){
     if(state.mode!=='preview') return;
-    const ps=pageNotes();
+    const ps=pageNotes(), p=cur();
     buildSheet($('sheet1'),$('faceBack'),$('faceFront'),ps,false);
     buildSheet($('sheet2'),$('faceInLeft'),$('faceInRight'),ps,true);
-    $('pvNames').textContent='On this sheet: '+ps.map(p=>p.name).join(', ');
+    const per=state.perPage||4, written=people.filter(isDone).length;
+    let html=`On this sheet: ${ps.map(p=>escapeHtml(p.name)).join(', ')} <span class="g-count">${ps.length} of ${per} ${per===1?'space':'spaces'} used</span>`;
+    if(state.scope==='one'&&written>1) html+=`<span style="flex-basis:100%">Only this person is on the sheet because “Print cards for” is set to “This person”.</span><button type="button" class="link-btn" id="pvAll">Show everyone with a letter</button>`;
+    else if(state.scope==='group'&&written>ps.length&&p.group.people.filter(isDone).length<written) html+=`<button type="button" class="link-btn" id="pvAll">Show everyone with a letter</button>`;
+    $('pvNames').innerHTML=html;
+    const b=$('pvAll'); if(b) b.onclick=()=>{ state.scope='all'; applyStyle(); };
   }
   new ResizeObserver(schedulePreview).observe($('preview'));
   function applyMode(){
