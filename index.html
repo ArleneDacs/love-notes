@@ -233,6 +233,9 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 .primary:disabled{opacity:.6;cursor:progress;transform:none}
 .status{font-size:13px;margin-top:10px;min-height:1.2em;color:var(--muted)}
 .status.err{color:var(--danger)}
+.status.warn{color:var(--accent);font-weight:500}
+.ico-sm{width:30px;height:30px;border-radius:9px;background:var(--accent-soft);display:inline-grid;place-items:center;flex:none;vertical-align:middle}
+.ico-sm svg{width:17px;height:17px;stroke:var(--accent);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 details.adv{border:1px solid var(--line);border-radius:var(--r-md);padding:0 16px;background:var(--surface);transition:background .2s}
 details.adv[open]{background:var(--surface)}
 details.adv summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px;padding:14px 0;font-weight:600;font-size:15px}
@@ -476,6 +479,16 @@ dialog#writeModal::backdrop{background:rgba(43,33,37,.55);backdrop-filter:blur(3
           <li>Trim at the corner marks, then fold down the middle.</li>
         </ul>
       </details>
+    </section>
+
+    <section>
+      <h2 class="sec-title" style="display:flex;align-items:center;gap:10px"><span class="ico-sm" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 5-3.5 8.5-7 10-3.5-1.5-7-5-7-10V6l7-3z"/><path d="M9 12l2 2 4-4"/></svg></span>Keep your letters safe</h2>
+      <p class="help" style="margin:0 0 12px">Letters are saved only in this browser. Save a backup after writing, and load it on another computer or on the online version to carry on where you left off.</p>
+      <div class="row">
+        <button class="btn" id="btnBackup">Save a backup</button>
+        <label class="btn file-btn" id="restoreLabel">Load a backup<input type="file" id="restoreFile" accept="application/json,.json" hidden></label>
+      </div>
+      <div class="status" id="backupInfo"></div>
     </section>
   </aside>
 </main>
@@ -775,7 +788,7 @@ dialog#writeModal::backdrop{background:rgba(43,33,37,.55);backdrop-filter:blur(3
     const total=people.length, done=people.filter(isDone).length;
     $('progressText').innerHTML=`<b>${done}</b> of ${total} letters written`;
     $('progressBar').style.width=(total?done/total*100:0)+'%';
-    syncSteps();
+    syncSteps(); backupInfo();
   }
   function updateFilterCounts(){
     const done=people.filter(isDone).length, counts={all:people.length,todo:people.length-done,done};
@@ -788,7 +801,7 @@ dialog#writeModal::backdrop{background:rgba(43,33,37,.55);backdrop-filter:blur(3
     const total=people.length, done=people.filter(isDone).length;
     $('progressText').innerHTML=`<b>${done}</b> of ${total} letters written`;
     $('progressBar').style.width=(total?done/total*100:0)+'%';
-    syncSteps();
+    syncSteps(); backupInfo();
   }
 
   // ---------- current note ----------
@@ -1242,7 +1255,56 @@ dialog#writeModal::backdrop{background:rgba(43,33,37,.55);backdrop-filter:blur(3
   syncPer();
   IDB.all().then(all=>{ photos=all||{}; loadCurrent(); schedulePreview(); }).catch(()=>{});
 
-  applyStyle(); renderList(); loadCurrent(); applyView(); applyMode(); fit();
+  // ---------- backup and restore ----------
+  // Letters live only in this browser, so a backup file is how they survive a new device, a new link or cleared data.
+  function backupInfo(){
+    const el=$('backupInfo'); if(!el) return;
+    const any=people.some(isDone), t=state.lastBackup, stale=any&&t&&Date.now()-t>7*864e5;
+    if(t){ el.textContent='Last backup: '+new Date(t).toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'})+(stale?'. Save a new one to keep your recent letters safe.':'.'); }
+    else el.textContent=any?'No backup yet. Save one so your letters are safe.':'No backup yet.';
+    el.classList.toggle('warn',!!(stale||(any&&!t)));
+  }
+  async function saveBackup(){
+    const data={app:'love-note-studio',version:1,exportedAt:new Date().toISOString(),state:{...state},photos};
+    const blob=new Blob([JSON.stringify(data)],{type:'application/json'});
+    const name='love-notes-backup-'+new Date().toISOString().slice(0,10)+'.json';
+    try{
+      if(downloads){ await downloads.save({filename:name,data:blob}); }
+      else{ const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },2000); }
+      state.lastBackup=Date.now(); save(); backupInfo(); toast('Backup saved: '+name);
+    }catch(err){ if(!(err&&err.code==='declined')) toast('The backup couldn’t be saved. Try again.'); }
+  }
+  async function loadBackup(file){
+    let data=null; try{ data=JSON.parse(await file.text()); }catch(e){}
+    if(!data||data.app!=='love-note-studio'||!data.state||typeof data.state!=='object'){ toast('That file isn’t a Love Note Studio backup.'); return; }
+    const inc=data.state, notes=(inc.notes&&typeof inc.notes==='object')?inc.notes:{}, incExtra=Array.isArray(inc.extra)?inc.extra:[];
+    // names added by hand get new ids when two lists are merged, so remap the backup's ids by name
+    const extraMerged=[...new Set([...(state.extra||[]), ...incExtra])];
+    const remap=id=>{ if(!id.startsWith('gx-')) return id; const j=extraMerged.indexOf(incExtra[+id.slice(3)]); return j<0?null:'gx-'+j; };
+    const hasMsg=x=>!!(x&&x.msg&&String(x.msg).trim());
+    const entries=Object.entries(notes).map(([id,x])=>[remap(id),x]).filter(([id,x])=>id&&x&&typeof x==='object');
+    const n=entries.filter(([,x])=>hasMsg(x)).length;
+    if(!confirm(`Load ${n} ${n===1?'letter':'letters'} from this backup?`)) return;
+    const conflicts=entries.filter(([id,x])=>hasMsg(x)&&hasMsg(state.notes[id])).length;
+    let replace=true;
+    if(conflicts) replace=confirm(`${conflicts} of them ${conflicts===1?'is for someone who already has':'are for people who already have'} a letter here.\n\nOK: use the backup’s version for them.\nCancel: keep the letters already here. The rest are still added.`);
+    // a fresh browser takes the backup's settings too; one that already has letters keeps its own
+    const fresh=!people.some(isDone);
+    const {current:_c, mode:_m, notes:_n, extra:_e, ...settings}=inc;
+    if(fresh) state={...state, ...settings};
+    const merged={...state.notes}, took=new Set();
+    entries.forEach(([id,x])=>{ const local=merged[id]; if(!hasMsg(local)||(replace&&hasMsg(x))){ merged[id]=x; took.add(id); } });
+    state.notes=merged; state.extra=extraMerged;
+    if(![1,2,4].includes(state.perPage)) state.perPage=4;
+    for(const [id,v] of Object.entries(data.photos||{})){ const nid=remap(id); if(nid&&typeof v==='string'&&(took.has(nid)||!photos[nid])){ photos[nid]=v; await IDB.set(nid,v).catch(()=>{}); } }
+    buildPeople(); if(!byId(state.current)) state.current=people[0].id;
+    $('fromName').value=state.from||''; applyStyle(); syncPer(); renderList(); loadCurrent(); applyMode(); save(); backupInfo();
+    toast(`Loaded ${n} ${n===1?'letter':'letters'} from the backup.`);
+  }
+  $('btnBackup').onclick=saveBackup;
+  $('restoreFile').addEventListener('change',e=>{ const f=e.target.files&&e.target.files[0]; e.target.value=''; if(f) loadBackup(f); });
+
+  applyStyle(); renderList(); loadCurrent(); applyView(); applyMode(); fit(); backupInfo();
 })();
 </script>
 </body>

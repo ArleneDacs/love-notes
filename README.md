@@ -6,6 +6,7 @@ A single-page app for writing a personal love note to everyone on a list and pri
 - Choose a card style (theme, cover art, lettering, handwriting) for all cards or for one person.
 - Print preview shows exactly how each sheet will come out, then download a PDF to print double-sided.
 - Everything is saved in the browser (letters in local storage, photos in IndexedDB). Nothing is sent to a server.
+- **Save a backup** downloads one file with every letter, photo and setting. **Load a backup** brings them into another browser, computer or the online version, so you can carry on where you left off.
 
 ## Run it
 
