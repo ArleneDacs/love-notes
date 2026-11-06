@@ -1,6 +1,6 @@
 # Love Note Studio
 
-A single-page app for writing a personal love note to everyone on a list and printing them as folded cards.
+A single-page app for writing a personal love note to everyone on a list and printing them as cards: folded booklet cards, or flat one-sided cards.
 
 - Pick a name, write the letter, and see it on a 3D card as you type.
 - Choose a card style (theme, cover art, lettering, handwriting) for all cards or for one person.

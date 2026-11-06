@@ -166,6 +166,20 @@ em.opt{font-style:normal;font-weight:500;color:var(--muted);font-size:12px;margi
 .msg{position:relative;font-family:var(--c-hand-font);line-height:1.5em;min-height:100%;padding:0 .15em}
 .sign{font-family:var(--c-hand-font);font-size:calc(1.45em*var(--c-ts)*var(--fit,1));text-align:right;align-self:flex-end;margin-top:.45em;padding:0 .15em;min-width:3em;max-width:100%;line-height:1.25}
 
+/* flat card: a cover-coloured mat around one paper panel that carries the whole letter */
+.f-flat{background:var(--c-cover);color:var(--c-ink);padding:7.5%;display:flex}
+.f-flat::before{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(172deg,rgba(255,255,255,.3) 0%,rgba(255,255,255,0) 48%,rgba(0,0,0,.04) 100%)}
+.flat-paper{position:relative;flex:1;min-height:0;min-width:0;background:var(--c-paper);border-radius:.45em;box-shadow:0 .12em .5em rgba(0,0,0,.14);display:flex;flex-direction:column;padding:1.2em 1.1em 1em}
+.flat-head{display:flex;flex-direction:column;align-items:center;gap:.2em;margin-bottom:.4em}
+.flat-title{font-family:var(--c-title-font);font-size:calc(1.75em*var(--c-ts)*var(--fit,1));line-height:1.1;text-align:center;min-width:2em;max-width:100%;padding:.05em .2em;overflow-wrap:normal;word-break:normal}
+.flat-head .orn{width:.9em;height:.9em}
+.f-flat .msg-wrap{margin-top:.2em}
+.f-flat .photo-flat{display:none}
+.f-flat.has-photo .photo-flat{display:block;width:38%;aspect-ratio:1;margin:0 auto .45em;border:.25em solid #FFFFFF;border-radius:.5em;box-shadow:0 .2em .6em rgba(120,60,80,.18);flex:none}
+.card.flat .leaf.cover{display:none}
+.card.flat .f-inright{display:none}
+.card:not(.flat) .f-flat{display:none}
+
 .f-back{background:var(--c-cover);color:var(--c-cover-ink);display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:.6em;padding:2em 1.8em 2.3em}
 .back-mark{position:relative;width:1.7em;height:1.7em;flex:none}
 .back-note{position:relative;font-family:var(--c-hand-font);font-size:calc(1em*var(--c-ts));opacity:.85;text-align:center;padding:0 .3em;min-width:3em;max-width:100%;line-height:1.35}
@@ -299,7 +313,7 @@ dialog#writeModal::backdrop{background:rgba(43,33,37,.55);backdrop-filter:blur(3
     <div class="logo" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg></div>
     <div>
       <h1>Love Note Studio</h1>
-      <p>Write a note for everyone on your list, then print them as folded cards.</p>
+      <p>Write a note for everyone on your list, then print them as cards to hand out.</p>
     </div>
   </div>
   <nav class="steps" aria-label="How it works">
@@ -373,6 +387,21 @@ dialog#writeModal::backdrop{background:rgba(43,33,37,.55);backdrop-filter:blur(3
             </div>
           </div>
           <div class="leaf base">
+            <div class="face front f-flat" id="faceFlat">
+              <svg class="motif" id="motifFlat" viewBox="0 0 100 140" preserveAspectRatio="xMidYMid slice" aria-hidden="true"></svg>
+              <div class="flat-paper">
+                <div class="photo photo-flat"></div>
+                <div class="flat-head">
+                  <div class="flat-title editable" contenteditable="true" data-key="title" data-ph="Title"></div>
+                  <svg class="orn" viewBox="0 0 24 24" aria-hidden="true"></svg>
+                </div>
+                <div class="msg-wrap">
+                  <div class="lines"></div>
+                  <div class="msg editable" contenteditable="true" data-key="msg" data-ph="Type your love note here…"></div>
+                </div>
+                <div class="sign editable" contenteditable="true" data-key="sign" data-ph="Love,"></div>
+              </div>
+            </div>
             <div class="face front f-inright" id="faceInRight">
               <div class="greet editable" contenteditable="true" data-key="greet" data-ph="Dear you,"></div>
               <div class="msg-wrap">
@@ -392,8 +421,8 @@ dialog#writeModal::backdrop{background:rgba(43,33,37,.55);backdrop-filter:blur(3
     </div>
     <div class="preview" id="preview" hidden>
       <p class="pv-note" id="pvNames"></p>
-      <figure><figcaption>Page 1, the outside of each card: back on the left, front on the right</figcaption><div class="sheet" id="sheet1"></div></figure>
-      <figure><figcaption>Page 2, the inside of each card</figcaption><div class="sheet" id="sheet2"></div></figure>
+      <figure id="fig1"><figcaption id="cap1">Page 1, the outside of each card: back on the left, front on the right</figcaption><div class="sheet" id="sheet1"></div></figure>
+      <figure id="fig2"><figcaption id="cap2">Page 2, the inside of each card</figcaption><div class="sheet" id="sheet2"></div></figure>
     </div>
     <div class="toolbar">
       <button class="chip" id="btnPrev">‹ Previous name</button>
@@ -452,6 +481,14 @@ dialog#writeModal::backdrop{background:rgba(43,33,37,.55);backdrop-filter:blur(3
     <section>
       <div class="eyebrow"><span class="stepnum">3</span>Step three</div>
       <h2 class="sec-title">Print the cards</h2>
+      <div class="field">
+        <span class="lab">Card type</span>
+        <div class="seg" id="formatSeg">
+          <button data-v="folded">Folded card</button>
+          <button data-v="flat">Flat card, one side</button>
+        </div>
+        <div class="help" id="tipFormat"></div>
+      </div>
       <div class="field"><span class="lab">Card size</span><div class="seg" id="perSeg"></div><div class="help" id="tipSize"></div></div>
       <div class="field">
         <span class="lab">Paper</span>
@@ -476,7 +513,7 @@ dialog#writeModal::backdrop{background:rgba(43,33,37,.55);backdrop-filter:blur(3
       <details class="tipsbox">
         <summary>How to print and fold</summary>
         <ul class="tips">
-          <li>The outside of each card is on page 1 and the inside is on page 2.</li>
+          <li id="tipPages">The outside of each card is on page 1 and the inside is on page 2.</li>
           <li id="tipFlip"></li>
           <li>Trim at the corner marks, then fold down the middle.</li>
         </ul>
@@ -560,7 +597,7 @@ dialog#writeModal::backdrop{background:rgba(43,33,37,.55);backdrop-filter:blur(3
     <div class="m-side">
       <div class="m-prev-lab">Live preview</div>
       <div id="mPrev"></div>
-      <p class="help">The front and the inside of this card. It updates as you type.</p>
+      <p class="help" id="mPrevHelp">The front and the inside of this card. It updates as you type.</p>
     </div>
     </div>
     <div class="m-err" id="mErr" role="alert"></div>
@@ -631,7 +668,7 @@ dialog#writeModal::backdrop{background:rgba(43,33,37,.55);backdrop-filter:blur(3
   const fields=[...document.querySelectorAll('[data-field]')];
 
   let state = {theme:0, ...THEMES[0], motif:'hearts', title:'serif', hand:'caveat', size:1, lines:true,
-    paperSize:'letter', scope:'all', onlyWritten:true, filter:'all', mode:'3d', from:'', extra:[], notes:{}, current:null};
+    paperSize:'letter', scope:'all', onlyWritten:true, format:'folded', filter:'all', mode:'3d', from:'', extra:[], notes:{}, current:null};
   delete state.name;
   let view = {rx:8, ry:-18, open:false};
 
@@ -671,6 +708,7 @@ dialog#writeModal::backdrop{background:rgba(43,33,37,.55);backdrop-filter:blur(3
     const src=n.photoSrc||'', pos=n.photoPos||'front';
     el.querySelectorAll('.f-front').forEach(f=>f.classList.toggle('has-photo',!!src&&pos==='front'));
     el.querySelectorAll('.f-inleft').forEach(f=>f.classList.toggle('has-photo',!!src&&pos==='left'));
+    el.querySelectorAll('.f-flat').forEach(f=>f.classList.toggle('has-photo',!!src));
     el.querySelectorAll('.photo').forEach(ph=>{ ph.style.backgroundImage=src?`url("${src}")`:''; ph.classList.toggle('circle',n.photoShape==='circle'); });
     renderArt(el);
   }
@@ -705,6 +743,7 @@ dialog#writeModal::backdrop{background:rgba(43,33,37,.55);backdrop-filter:blur(3
     const d=el._design; if(!d) return;
     el.querySelectorAll('.f-front').forEach(f=>{ const m=f.querySelector('.motif'); if(m) m.innerHTML=motifFront(d,f.classList.contains('has-photo')); });
     el.querySelectorAll('.f-back .motif').forEach(m=>m.innerHTML=motifBack(d));
+    el.querySelectorAll('.f-flat .motif').forEach(m=>m.innerHTML=motifFlat(d));
     el.querySelectorAll('.heart-mark,.orn,.back-mark').forEach(m=>m.innerHTML=`<path d="${HEART}" fill="${d.accent}"/>`);
   }
   // hearts stay in the border band, clear of the text zone (and of the photo when there is one)
@@ -720,6 +759,12 @@ dialog#writeModal::backdrop{background:rgba(43,33,37,.55);backdrop-filter:blur(3
     if(m==='seal') return frameArt(a)+(hasPhoto?'':sealArt(a));
     if(m==='arch') return hasPhoto?frameArt(a):archArt(a);
     return frameArt(a);
+  }
+  const HEARTS_MAT=[[4,5,.3,-14],[50,4,.22,0],[96,5,.28,10],[3.5,70,.24,16],[96.5,70,.24,-16],[4,135,.28,8],[50,136,.22,0],[96,135,.3,-10]];
+  function motifFlat(d){
+    const a=d.accent;
+    if(d.motif==='hearts') return HEARTS_MAT.map(p=>heartAt(p[0],p[1],p[2],a,.85,p[3])).join('');
+    return `<rect x="3" y="3" width="94" height="134" rx="1.2" fill="none" stroke="${a}" stroke-width=".5" opacity=".75"/><rect x="4.8" y="4.8" width="90.4" height="130.4" rx=".8" fill="none" stroke="${a}" stroke-width=".22" opacity=".6"/>`;
   }
   function motifBack(d){
     const a=d.accent, m=d.motif;
@@ -745,14 +790,14 @@ dialog#writeModal::backdrop{background:rgba(43,33,37,.55);backdrop-filter:blur(3
   function fitFaces(root){
     root.querySelectorAll('.front-text').forEach(z=>fitZone(z,z.firstElementChild,.5));
     root.querySelectorAll('.inleft-note').forEach(n=>fitZone(n,n,.45));
-    root.querySelectorAll('.f-inright').forEach(fitInside);
+    root.querySelectorAll('.f-inright,.f-flat').forEach(fitInside);
   }
 
   // ---------- style ----------
   function applyStyle(){
     applyDesignTo(card, designFor(cur())); fitFaces(card);
     document.querySelectorAll('#swatches .sw').forEach((s,i)=>s.setAttribute('aria-pressed',i===state.theme));
-    const segs={motifSeg:'motif',titleSeg:'title',paperSeg:'paperSize',scopeSeg:'scope',filterSeg:'filter',modeSeg:'mode'};
+    const segs={motifSeg:'motif',titleSeg:'title',paperSeg:'paperSize',scopeSeg:'scope',filterSeg:'filter',modeSeg:'mode',formatSeg:'format'};
     Object.entries(segs).forEach(([id,k])=>document.querySelectorAll('#'+id+' button').forEach(bt=>bt.setAttribute('aria-pressed',bt.dataset.v===state[k])));
     $('cCover').value=state.cover; $('cCoverInk').value=state.coverInk; $('cAccent').value=state.accent; $('cInk').value=state.ink;
     $('handSel').value=state.hand; $('sizeRange').value=state.size; $('linesChk').checked=state.lines; $('onlyWritten').checked=state.onlyWritten;
@@ -832,14 +877,14 @@ dialog#writeModal::backdrop{background:rgba(43,33,37,.55);backdrop-filter:blur(3
   function setText(key,val,source){
     const p=cur();
     state.notes[p.id]={...(state.notes[p.id]||{}),[key]:val};
-    if(source!=='card'){ const el=editables.find(e=>e.dataset.key===key); if(el) el.textContent=val; }
+    editables.forEach(x=>{ if(x.dataset.key===key&&x!==source) x.textContent=val; });
     if(source!=='field'){ const f=fields.find(x=>x.dataset.field===key); if(f) f.value=val; }
     if(key==='title'||key==='sub'||key==='left'||key==='msg') fitFaces(card);
     if(key==='msg'){ const wasShown=document.querySelector(`.person[data-id="${p.id}"]`); refreshListMarks(); if(state.filter!=='all'&&!wasShown) renderList(); }
     save(); schedulePreview();
   }
   editables.forEach(el=>{
-    el.addEventListener('input',()=>{ if(el.textContent.trim()==='') el.innerHTML=''; setText(el.dataset.key, el.innerText.replace(/\n$/,''), 'card'); });
+    el.addEventListener('input',()=>{ if(el.textContent.trim()==='') el.innerHTML=''; setText(el.dataset.key, el.innerText.replace(/\n$/,''), el); });
     el.addEventListener('paste',e=>{ e.preventDefault(); document.execCommand('insertText',false,(e.clipboardData||window.clipboardData).getData('text/plain')); });
     el.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); document.execCommand('insertLineBreak'); } });
   });
@@ -922,7 +967,7 @@ dialog#writeModal::backdrop{background:rgba(43,33,37,.55);backdrop-filter:blur(3
   $('sizeRange').oninput=e=>{state.size=parseFloat(e.target.value);applyStyle();};
   $('linesChk').onchange=e=>{state.lines=e.target.checked;applyStyle();};
   $('onlyWritten').onchange=e=>{state.onlyWritten=e.target.checked;save();schedulePreview();};
-  $('lines').innerHTML='<i></i>'.repeat(40);
+  document.querySelectorAll('.lines').forEach(l=>l.innerHTML='<i></i>'.repeat(40));
 
   // ---------- 3D view ----------
   function applyView(){
@@ -932,7 +977,16 @@ dialog#writeModal::backdrop{background:rgba(43,33,37,.55);backdrop-filter:blur(3
     $('btnOpen').textContent=view.open?'Close card':'Open card';
     $('btnOpen').setAttribute('aria-pressed',view.open);
   }
-  $('btnOpen').onclick=()=>{ view.open=!view.open; if(view.open){ view.ry=0; view.rx=6; } applyView(); };
+  $('btnOpen').onclick=()=>{ if(state.format==='flat') return; view.open=!view.open; if(view.open){ view.ry=0; view.rx=6; } applyView(); };
+  function applyFormat(){
+    const flat=state.format==='flat';
+    card.classList.toggle('flat',flat);
+    if(flat&&view.open){ view.open=false; view.ry=-18; applyView(); }
+    $('tipFormat').textContent = flat ? 'One panel with the letter on it. Prints on one side, nothing to fold.' : 'Opens like a little book: a cover, a page for a memory or photo, and the letter inside.';
+    $('btnOpen').hidden = flat || state.mode==='preview';
+    fit();
+  }
+  document.querySelectorAll('#formatSeg button').forEach(b=>b.onclick=()=>{ state.format=b.dataset.v; applyFormat(); applyStyle(); syncPer(); applyMode(); });
   $('btnBack').onclick=()=>{ view.open=false; view.ry=180; view.rx=6; applyView(); };
   $('btnReset').onclick=()=>{ view.rx=8; view.ry=view.open?0:-18; applyView(); };
   let drag=null;
@@ -967,6 +1021,13 @@ dialog#writeModal::backdrop{background:rgba(43,33,37,.55);backdrop-filter:blur(3
   let FW=2.5, FH=3.5;
   function layout(){
     const n=state.perPage||4, B=paper(); let L;
+    if(state.format==='flat'){
+      if(n===1){ const P=B, fw=5, fh=7, gx=.4, x0=(P.w-(fw*2+gx))/2, y=(P.h-fh)/2; L={P,orient:'landscape',FW:fw,FH:fh,slots:[0,1].map(c=>({y,x:x0+c*(fw+gx)}))}; }
+      else if(n===2){ const P={w:B.h,h:B.w}, fh=4.8, fw=fh*5/7, gx=.4, gy=.4, x0=(P.w-(fw*2+gx))/2, y0=(P.h-(fh*2+gy))/2; L={P,orient:'portrait',FW:fw,FH:fh,slots:[0,1,2,3].map(i=>({y:y0+(i>>1)*(fh+gy),x:x0+(i&1)*(fw+gx)}))}; }
+      else { const P=B, fw=2.5, fh=3.5, gx=.5, gy=.5, x0=(P.w-(fw*3+gx*2))/2, y0=(P.h-(fh*2+gy))/2; L={P,orient:'landscape',FW:fw,FH:fh,slots:[0,1,2,3,4,5].map(i=>({y:y0+Math.floor(i/3)*(fh+gy),x:x0+(i%3)*(fw+gx)}))}; }
+      L.slots.forEach(sl=>{ sl.out=sl.x; sl.inn=sl.x; });
+      FW=L.FW; FH=L.FH; L.n=L.slots.length; L.flat=true; L.panelW=L.FW; L.flip='none'; return L;
+    }
     if(n===1){
       const P=B, fw=5, fh=7, x=(P.w-fw*2)/2, y=(P.h-fh)/2;
       L={P,orient:'landscape',FW:fw,FH:fh,slots:[{y,out:x,inn:x}]};
@@ -980,46 +1041,52 @@ dialog#writeModal::backdrop{background:rgba(43,33,37,.55);backdrop-filter:blur(3
       if(n===3){ const xc=(P.w-sw)/2; s=[s[0],s[1],{y:s[2].y,out:xc,inn:xc}]; }
       L={P,orient:'landscape',FW:fw,FH:fh,slots:s};
     }
-    FW=L.FW; FH=L.FH; L.n=n; L.flip=L.orient==='portrait'?'long':'short'; return L;
+    FW=L.FW; FH=L.FH; L.n=n; L.flat=false; L.panelW=L.FW*2; L.flip=L.orient==='portrait'?'long':'short'; return L;
   }
   function scopeList(){
     const p=cur(); let list = state.scope==='one' ? [p] : state.scope==='group' ? p.group.people : people;
     if(state.onlyWritten) list=list.filter(isDone);
     return list;
   }
-  function marksSVG(P,rects){
-    const w=FW*2, h=FH, g=MG, l=ML;
+  function marksSVG(P,rects,L){
+    const w=L.panelW, h=FH, g=MG, l=ML;
     let s=`<svg class="marks" viewBox="0 0 ${P.w} ${P.h}" aria-hidden="true"><g stroke="#888" stroke-width=".008">`;
     rects.forEach(({x,y})=>{
       [[x,y],[x+w,y],[x,y+h],[x+w,y+h]].forEach(([cx,cy])=>{ const sx=cx===x?-1:1, sy=cy===y?-1:1;
         s+=`<line x1="${cx+sx*g}" y1="${cy}" x2="${cx+sx*(g+l)}" y2="${cy}"/><line x1="${cx}" y1="${cy+sy*g}" x2="${cx}" y2="${cy+sy*(g+l)}"/>`; });
-      s+=`<line x1="${x+FW}" y1="${y-g}" x2="${x+FW}" y2="${y-g-l}" stroke-dasharray=".03 .03"/><line x1="${x+FW}" y1="${y+h+g}" x2="${x+FW}" y2="${y+h+g+l}" stroke-dasharray=".03 .03"/>`;
+      if(!L.flat) s+=`<line x1="${x+FW}" y1="${y-g}" x2="${x+FW}" y2="${y-g-l}" stroke-dasharray=".03 .03"/><line x1="${x+FW}" y1="${y+h+g}" x2="${x+FW}" y2="${y+h+g+l}" stroke-dasharray=".03 .03"/>`;
     });
     return s+'</g></svg>';
   }
   function pageNotes(){
     const list=scopeList(), p=cur(), i=list.indexOf(p);
     if(i<0) return [p];
-    const per=state.perPage||4, start=Math.floor(i/per)*per; return list.slice(start,start+per);
+    const per=layout().n, start=Math.floor(i/per)*per; return list.slice(start,start+per);
   }
-  function buildSheet(sheet,left,right,ps,inside){
+  function buildSheet(sheet,faces,ps,inside){
     const L=layout(), P=L.P; sheet.style.aspectRatio=P.w+' / '+P.h; sheet.innerHTML='';
     const W=sheet.clientWidth; if(!W) return; const ppi=W/P.w, S=L.slots, rects=[];
     ps.forEach((person,k)=>{
       const s=S[k], x=inside?s.inn:s.out, n=noteFor(person), d=designFor(person);
-      [left,right].forEach((f,i)=>{ const fl=buildFlat(f,n,d); fl.style.position='absolute'; fl.style.left=((x+i*FW)*ppi)+'px'; fl.style.top=(s.y*ppi)+'px'; fl.style.transformOrigin='0 0'; fl.style.transform=`scale(${FW*ppi/600})`; mountFlat(fl,sheet); });
+      faces.forEach((f,i)=>{ const fl=buildFlat(f,n,d); fl.style.position='absolute'; fl.style.left=((x+i*FW)*ppi)+'px'; fl.style.top=(s.y*ppi)+'px'; fl.style.transformOrigin='0 0'; fl.style.transform=`scale(${FW*ppi/600})`; mountFlat(fl,sheet); });
       rects.push({x,y:s.y});
     });
-    sheet.insertAdjacentHTML('beforeend',marksSVG(P,rects));
+    sheet.insertAdjacentHTML('beforeend',marksSVG(P,rects,L));
   }
   let prevT;
   function schedulePreview(){ if(state.mode!=='preview') return; clearTimeout(prevT); prevT=setTimeout(renderPreview,200); }
   function renderPreview(){
     if(state.mode!=='preview') return;
-    const ps=pageNotes(), p=cur();
-    buildSheet($('sheet1'),$('faceBack'),$('faceFront'),ps,false);
-    buildSheet($('sheet2'),$('faceInLeft'),$('faceInRight'),ps,true);
-    const per=state.perPage||4, written=people.filter(isDone).length;
+    const ps=pageNotes(), p=cur(), L=layout();
+    if(L.flat){
+      buildSheet($('sheet1'),[$('faceFlat')],ps,false); $('fig2').hidden=true;
+      $('cap1').textContent='The cards. Print on one side only, then trim at the corner marks.';
+    }else{
+      buildSheet($('sheet1'),[$('faceBack'),$('faceFront')],ps,false);
+      buildSheet($('sheet2'),[$('faceInLeft'),$('faceInRight')],ps,true); $('fig2').hidden=false;
+      $('cap1').textContent='Page 1, the outside of each card: back on the left, front on the right';
+    }
+    const per=L.n, written=people.filter(isDone).length;
     let html=`On this sheet: ${ps.map(p=>escapeHtml(p.name)).join(', ')} <span class="g-count">${ps.length} of ${per} ${per===1?'space':'spaces'} used</span>`;
     if(state.scope==='one'&&written>1) html+=`<span style="flex-basis:100%">Only this person is on the sheet because “Print cards for” is set to “This person”.</span><button type="button" class="link-btn" id="pvAll">Show everyone with a letter</button>`;
     else if(state.scope==='group'&&written>ps.length&&p.group.people.filter(isDone).length<written) html+=`<button type="button" class="link-btn" id="pvAll">Show everyone with a letter</button>`;
@@ -1030,7 +1097,7 @@ dialog#writeModal::backdrop{background:rgba(43,33,37,.55);backdrop-filter:blur(3
   function applyMode(){
     const pv=state.mode==='preview';
     $('scene').hidden=pv; $('hint').hidden=pv; $('preview').hidden=!pv;
-    ['btnOpen','btnBack','btnReset'].forEach(id=>$(id).hidden=pv);
+    ['btnOpen','btnBack','btnReset'].forEach(id=>$(id).hidden=pv); if(state.format==='flat') $('btnOpen').hidden=true;
     if(pv) requestAnimationFrame(renderPreview); else requestAnimationFrame(fit);
     syncSteps();
   }
@@ -1054,10 +1121,11 @@ dialog#writeModal::backdrop{background:rgba(43,33,37,.55);backdrop-filter:blur(3
     try{ const cv=await html2canvas(fl,{scale,backgroundColor:null,logging:false}); return cv.toDataURL('image/jpeg',q); }
     finally{ fl.remove(); }
   }
-  function pdfMarks(doc,x,y){
+  function pdfMarks(doc,x,y,L){
     doc.setDrawColor(130); doc.setLineWidth(.006);
-    const g=MG,l=ML,w=FW*2,h=FH;
+    const g=MG,l=ML,w=L.panelW,h=FH;
     [[x,y],[x+w,y],[x,y+h],[x+w,y+h]].forEach(([cx,cy])=>{ const sx=cx===x?-1:1, sy=cy===y?-1:1; doc.line(cx+sx*g,cy,cx+sx*(g+l),cy); doc.line(cx,cy+sy*g,cx,cy+sy*(g+l)); });
+    if(L.flat) return;
     doc.setLineDashPattern([.03,.03],0); doc.line(x+FW,y-g,x+FW,y-g-l); doc.line(x+FW,y+h+g,x+FW,y+h+g+l); doc.setLineDashPattern([],0);
   }
   const slug = s => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
@@ -1076,22 +1144,28 @@ dialog#writeModal::backdrop{background:rgba(43,33,37,.55);backdrop-filter:blur(3
       const L=layout(), per=L.n;
       const doc=new jsPDF({orientation:L.orient,unit:'in',format:state.paperSize==='a4'?'a4':'letter',compress:true});
       const W=doc.internal.pageSize.getWidth(), H=doc.internal.pageSize.getHeight();
-      const S=L.slots, scale=per===1?2:per===2?1.6:1.25, q=.9;
+      const S=L.slots, scale=FW>=5?2:FW>=3?1.6:1.25, q=.9;
       for(let pg=0;pg<list.length;pg+=per){
         const chunk=list.slice(pg,pg+per), caps=[];
         for(let k=0;k<chunk.length;k++){
           const n=noteFor(chunk[k]), d=designFor(chunk[k]);
           btn.textContent=list.length>1?`Making ${pg+k+1} of ${list.length}…`:'Preparing PDF…';
-          caps.push({back:await capture($('faceBack'),n,d,scale,q), front:await capture($('faceFront'),n,d,scale,q),
+          if(L.flat) caps.push({flat:await capture($('faceFlat'),n,d,scale,q)});
+          else caps.push({back:await capture($('faceBack'),n,d,scale,q), front:await capture($('faceFront'),n,d,scale,q),
             inL:await capture($('faceInLeft'),n,d,scale,q), inR:await capture($('faceInRight'),n,d,scale,q)});
         }
         const sheet=pg/per+1;
         if(pg>0) doc.addPage();
         doc.setFontSize(7); doc.setTextColor(130);
-        caps.forEach((c,k)=>{ const s=S[k]; doc.addImage(c.back,'JPEG',s.out,s.y,FW,FH); doc.addImage(c.front,'JPEG',s.out+FW,s.y,FW,FH); pdfMarks(doc,s.out,s.y); });
+        if(L.flat){
+          caps.forEach((c,k)=>{ const s=S[k]; doc.addImage(c.flat,'JPEG',s.x,s.y,FW,FH); pdfMarks(doc,s.x,s.y,L); });
+          doc.text(`Sheet ${sheet}: ${chunk.map(p=>p.name).join(', ')}. Print on one side. Trim at the marks.`,W/2,H-.18,{align:'center',maxWidth:W-.6});
+          continue;
+        }
+        caps.forEach((c,k)=>{ const s=S[k]; doc.addImage(c.back,'JPEG',s.out,s.y,FW,FH); doc.addImage(c.front,'JPEG',s.out+FW,s.y,FW,FH); pdfMarks(doc,s.out,s.y,L); });
         doc.text(`Sheet ${sheet}, outside. Print double-sided, flip on ${L.flip} edge. Trim at the marks, fold each card in the middle.`,W/2,H-.18,{align:'center'});
         doc.addPage();
-        caps.forEach((c,k)=>{ const s=S[k]; doc.addImage(c.inL,'JPEG',s.inn,s.y,FW,FH); doc.addImage(c.inR,'JPEG',s.inn+FW,s.y,FW,FH); pdfMarks(doc,s.inn,s.y); });
+        caps.forEach((c,k)=>{ const s=S[k]; doc.addImage(c.inL,'JPEG',s.inn,s.y,FW,FH); doc.addImage(c.inR,'JPEG',s.inn+FW,s.y,FW,FH); pdfMarks(doc,s.inn,s.y,L); });
         doc.text(`Sheet ${sheet}, inside: ${chunk.map(p=>p.name).join(', ')}`,W/2,H-.18,{align:'center',maxWidth:W-.6});
       }
       const name = state.scope==='one' ? `love-note-${slug(p.name)}.pdf` : state.scope==='group' ? `love-notes-${slug(p.group.title)}.pdf` : 'love-notes-everyone.pdf';
@@ -1157,7 +1231,7 @@ dialog#writeModal::backdrop{background:rgba(43,33,37,.55);backdrop-filter:blur(3
     const t=$('mPhotoThumb');
     t.style.backgroundImage=mPhoto?`url("${mPhoto}")`:''; t.textContent=mPhoto?'':'No photo'; t.classList.toggle('set',!!mPhoto);
     t.style.borderRadius=mPhotoShape==='circle'?'50%':'12px';
-    $('mPhotoRemove').hidden=!mPhoto; $('mPhotoOpts').hidden=!mPhoto;
+    $('mPhotoRemove').hidden=!mPhoto; $('mPhotoOpts').hidden=!mPhoto; $('mPhotoPos').hidden=state.format==='flat';
     $('mPhotoLabel').firstChild.textContent=mPhoto?'Change photo':'Choose photo';
     document.querySelectorAll('#mPhotoPos button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===mPhotoPos));
     document.querySelectorAll('#mPhotoShape button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===mPhotoShape));
@@ -1194,7 +1268,8 @@ dialog#writeModal::backdrop{background:rgba(43,33,37,.55);backdrop-filter:blur(3
     const box=$('mPrev'); if(!mDraft) return; box.innerHTML='';
     const w=box.clientWidth; if(!w) return;
     const fw=Math.min(150,(w-10)/2), sc=fw/600, note=draftNote();
-    (mPhoto&&mPhotoPos==='left'?[$('faceInLeft'),$('faceInRight')]:[$('faceFront'),$('faceInRight')]).forEach(f=>{
+    $('mPrevHelp').textContent = state.format==='flat' ? 'The card and its back. It updates as you type.' : 'The front and the inside of this card. It updates as you type.';
+    (state.format==='flat'?[$('faceFlat'),$('faceBack')]:mPhoto&&mPhotoPos==='left'?[$('faceInLeft'),$('faceInRight')]:[$('faceFront'),$('faceInRight')]).forEach(f=>{
       const holder=document.createElement('div'); holder.className='mp-card';
       holder.style.width=fw+'px'; holder.style.height=(fw*1.4)+'px';
       const fl=buildFlat(f,note,mDraft); fl.style.transformOrigin='0 0'; fl.style.transform=`scale(${sc})`;
@@ -1253,11 +1328,12 @@ dialog#writeModal::backdrop{background:rgba(43,33,37,.55);backdrop-filter:blur(3
   if(![1,2,4].includes(state.perPage)) state.perPage=4;
   [[1,'Large'],[2,'Medium'],[4,'Small']].forEach(([v,l])=>{ const b=document.createElement('button'); b.type='button'; b.dataset.v=v; b.textContent=l; b.onclick=()=>{ state.perPage=v; syncPer(); save(); schedulePreview(); }; $('perSeg').appendChild(b); });
   function syncPer(){
-    const n=state.perPage;
+    const n=state.perPage, flat=state.format==='flat', L=layout();
     document.querySelectorAll('#perSeg button').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.v===n));
     const size = n===1 ? '5 × 7 in' : n===2 ? '3.4 × 4.8 in' : '2.5 × 3.5 in';
-    $('tipSize').textContent = n===1 ? `One card per sheet. It folds to ${size}.` : `${n} cards per sheet. Each folds to ${size}.`;
-    $('tipFlip').textContent=`Print double-sided and choose “flip on ${n===2?'long':'short'} edge”. If the inside prints upside down, pick the other flip setting.`;
+    $('tipSize').textContent = flat ? `${L.n} cards per sheet. Each one is ${size}.` : n===1 ? `One card per sheet. It folds to ${size}.` : `${n} cards per sheet. Each folds to ${size}.`;
+    $('tipFlip').textContent = flat ? 'Print on one side only. Nothing to fold.' : `Print double-sided and choose “flip on ${n===2?'long':'short'} edge”. If the inside prints upside down, pick the other flip setting.`;
+    $('tipPages').hidden=flat;
   }
   syncPer();
   IDB.all().then(all=>{ photos=all||{}; loadCurrent(); schedulePreview(); }).catch(()=>{});
@@ -1311,7 +1387,8 @@ dialog#writeModal::backdrop{background:rgba(43,33,37,.55);backdrop-filter:blur(3
   $('btnBackup').onclick=saveBackup;
   $('restoreFile').addEventListener('change',e=>{ const f=e.target.files&&e.target.files[0]; e.target.value=''; if(f) loadBackup(f); });
 
-  applyStyle(); renderList(); loadCurrent(); applyView(); applyMode(); fit(); backupInfo();
+  if(state.format!=='flat') state.format='folded';
+  applyFormat(); applyStyle(); renderList(); loadCurrent(); applyView(); applyMode(); fit(); backupInfo();
 })();
 </script>
 </body>
